@@ -18,7 +18,7 @@ void main() {
   runApp(MyApp());
 }
 
-class currentSettings {
+class currentSettings{
   final String vibrationStrength;
   final String flexSensitivity;
   final int waitTime;
@@ -33,27 +33,42 @@ class currentSettings {
     return currentSettings(
       vibrationStrength: json['vibration_strength'],
       flexSensitivity: json['flex_sensitivity'],
-      waitTime: json['wait_time'],
+      waitTime: json['vibration_duration'] != null ? int.tryParse(json['vibration_duration'].toString()) ?? 0 : 0,
     );
-  }
-}
-
-Future<currentSettings> fetchSettings() async {
-  final response = await http
-      .get(Uri.parse('https://sps-api-ce9301a647f2.herokuapp.com/settings?device_id=1'));
+  }}
+Future<currentSettings?> fetchSettings() async {
+  final response = await http.get(Uri.parse('https://sps-api-ce9301a647f2.herokuapp.com/settings?device_id=1'));
 
   if (response.statusCode == 200) {
     return currentSettings.fromJson(jsonDecode(response.body));
   } else {
-    throw Exception('Failed to load settings');
+    print('Failed to load settings, request failed with status: ${response.statusCode}');
+    return null; // Return null in case of an error.
   }
 }
 
 Future<void> changeSettings(vibrationStrength, flexSensitivity, waitTime) async {
   final url = Uri.parse('https://sps-api-ce9301a647f2.herokuapp.com/settings');
   final headers = {"Content-type": "application/json"};
-  final json = '{"device_id" : "1", "vibration_strength" : "$vibrationStrength", "flex_sensitivity" : "$flexSensitivity", "wait_time" : "$waitTime"}';
-  final response = await http.patch(url, headers: headers, body: json);
+  final Map<String, String> data = {
+    "device_id": "1",
+    "vibration_strength": "${vibrationStrength.toString()}",
+    "flex_sensitivity": "${flexSensitivity.toString()}",
+    "vibration_duration": "${waitTime.toString()}",
+  };
+
+  print(jsonEncode(data));
+
+  final response = await http.patch(url, headers: headers, body: jsonEncode(data));
+
+  if (response.statusCode == 200) {
+    print('Request successful');
+  } else if (response.statusCode == 204) {
+    print('Request successful');
+  } else {
+    print('Request failed with status: ${response.statusCode}');
+    print('Response body: ${response.body}');
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -77,25 +92,64 @@ class MyApp extends StatelessWidget {
 }
 
 class MyAppState extends ChangeNotifier {
-  var vibrationStrength = "Medium";
-  var flexSensitivity = "Medium";
+  List<bool> isSelected0 = [false, true, false];
+  List<bool> isSelected1 = [false, true, false];
+  List<bool> isSelected2 = [false, true, false];
+
+  void initialSetting (settings) {
+    print(Text("here"));
+    if (settings.vibrationStrength == "0") {
+      isSelected0 = [true, false, false];
+    }
+    else if (settings.vibrationStrength == "50") {
+      isSelected0 = [false, true, false];
+    }
+    else if (settings.vibrationStrength == "100") {
+      isSelected0 = [false, false, true];
+    }
+
+    if (settings.flexSensitivity == "0") {
+      isSelected1 = [true, false, false];
+    }
+    else if (settings.flexSensitivity == "50") {
+      isSelected1 = [false, true, false];
+    }
+    else if (settings.flexSensitivity == "100") {
+      isSelected1 = [false, false, true];
+    }
+
+    if (settings.waitTime == 5) {
+      isSelected2 = [true, false, false];
+    }
+    else if (settings.waitTime == 10) {
+      isSelected2 = [false, true, false];
+    }
+    else if (settings.waitTime == 15) {
+      isSelected2 = [false, false, true];
+    }
+    notifyListeners();
+  }
+
+  var vibrationStrength = 0;
+  var flexSensitivity = 0;
   var waitTime = 10;
   var deviceID = 1;
 
+
   void calibrateSPS (selected0,selected1,selected2) {
     if (selected0[0] == true){
-        vibrationStrength = "Light";}
+        vibrationStrength = 0;}
       else if (selected0[1]== true){
-        vibrationStrength = "Medium";}
+        vibrationStrength = 50;}
       else if (selected0[2]== true){
-        vibrationStrength = "Heavy";}
+        vibrationStrength = 100;}
 
     if (selected1[0] == true){
-        flexSensitivity = "Low";}
+        flexSensitivity = 0;}
       else if (selected1[1]== true){
-        flexSensitivity = "Medium";}
+        flexSensitivity = 50;}
       else if (selected1[2]== true){
-        flexSensitivity = "High";}
+        flexSensitivity = 100;}
 
     if (selected2[0] == true){
         waitTime = 5;}
@@ -116,9 +170,9 @@ class MyAppState extends ChangeNotifier {
 
   void setPostureCounts () {
     print( Text('setting bad posture counts'));
-    badPostureCountToday = Random().nextInt(20)+5;
-    badPostureCountWeek = Random().nextInt(50)+20;
+    badPostureCountToday = Random().nextInt(20)+5;0;
     badPostureCountMonth = Random().nextInt(100)+80;
+    badPostureCountWeek = Random().nextInt(50)+2;
     notifyListeners();
   }
 }
@@ -130,20 +184,24 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
 
-  late Future<currentSettings> futurecurrentSettings;
+  late Future<currentSettings?> futurecurrentSettings;
 
   @override
   void initState() {
     super.initState();
     futurecurrentSettings = fetchSettings();
-    print(Text('$futurecurrentSettings'));
+    futurecurrentSettings.then((settings) {
+      if (settings != null) {
+        context.read<MyAppState>().initialSetting(settings);
+
+         }});
   }
-
-
   var selectedIndex = 0;
 
   @override
   Widget build(BuildContext context) {
+
+
     Widget page;
     switch (selectedIndex) {
       case 0:
@@ -227,12 +285,13 @@ class CalibrationPage extends StatefulWidget {
 }
 
 class _CalibrationPageState extends State<CalibrationPage> {
-  List<bool> isSelected0 = [false, true, false];
-  List<bool> isSelected1 = [false, true, false];
-  List<bool> isSelected2 = [false, true, false];
+
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
+    var isSelected0 = appState.isSelected0;
+    var isSelected1 = appState.isSelected1;
+    var isSelected2 = appState.isSelected2;
 
     void startCalibrationTimer() {
       appState.calibrateSPS(isSelected0,isSelected1,isSelected2);
