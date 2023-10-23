@@ -7,14 +7,6 @@ import 'package:provider/provider.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 
-
-//TODO:"make use of icons for settings
-//TODO: upscale logo
-//TODO: bad posture count today: -> ?
-//TODO: look online how other apps do it -> way beyond the scope of this course
-//TODO: pop up on first open of the app
-//TODO: change up the colors a bit
-
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setPreferredOrientations([
