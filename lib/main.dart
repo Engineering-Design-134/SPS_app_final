@@ -118,13 +118,13 @@ class MyAppState extends ChangeNotifier {
       isSelected1 = [false, false, true];
     }
 
-    if (settings.vibrationDuration == "5000") {
+    if (settings.vibrationDuration == "500") {
       isSelected2 = [true, false, false];
     }
-    else if (settings.vibrationDuration == "10000") {
+    else if (settings.vibrationDuration == "1000") {
       isSelected2 = [false, true, false];
     }
-    else if (settings.vibrationDuration == "15000") {
+    else if (settings.vibrationDuration == "2000") {
       isSelected2 = [false, false, true];
     }
     notifyListeners();
@@ -152,11 +152,11 @@ class MyAppState extends ChangeNotifier {
         flexSensitivity = "2";}
 
     if (selected2[0] == true){
-        vibrationDuration = "";}
+        vibrationDuration = "500";}
       else if (selected2[1]== true){
-        vibrationDuration = "";}
+        vibrationDuration = "1000";}
       else if (selected2[2]== true){
-        vibrationDuration = "";}
+        vibrationDuration = "2000";}
 
     changeSettings(vibrationStrength,flexSensitivity,vibrationDuration);
   }
@@ -533,11 +533,11 @@ class _CalibrationPageState extends State<CalibrationPage> {
               fillColor: Colors.green[100], // Background color when selected
               borderColor: Colors.white, // Border color when selected
               children: const <Widget>[
-                Text("5",
+                Text("0.5",
                     style: TextStyle(fontSize: 20),),
-                Text("10",
+                Text("1",
                     style: TextStyle(fontSize: 20),),
-                Text("15",
+                Text("2",
                   style: TextStyle(fontSize: 20),),
               ],
             ),
