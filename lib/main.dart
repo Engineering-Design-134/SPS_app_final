@@ -7,33 +7,42 @@ import 'package:provider/provider.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 
-//TODO: change isSelected on app startup based on get function
-//TODO: have feedback on patch to see if it worked
+
+//TODO:"make use of icons for settings
+//TODO: upscale logo
+//TODO: bad posture count today: -> ?
+//TODO: look online how other apps do it -> way beyond the scope of this course
+//TODO: pop up on first open of the app
+//TODO: change up the colors a bit
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
-  ]).then((value)=>runApp(MyApp()));
-  runApp(MyApp());
-}
+  ]).then((value) {
+      runApp(MyApp());
+    });
+  }
 
-class currentSettings{
+
+bool tutorialShown = false;
+
+class currentSettings {
   final String vibrationStrength;
   final String flexSensitivity;
-  final int waitTime;
+  final String vibrationDuration;
 
   const currentSettings({
     required this.vibrationStrength,
     required this.flexSensitivity,
-    required this.waitTime,
+    required this.vibrationDuration,
   });
 
   factory currentSettings.fromJson(Map<String, dynamic> json) {
     return currentSettings(
       vibrationStrength: json['vibration_strength'],
       flexSensitivity: json['flex_sensitivity'],
-      waitTime: json['vibration_duration'] != null ? int.tryParse(json['vibration_duration'].toString()) ?? 0 : 0,
+      vibrationDuration: json['vibration_duration'],
     );
   }}
 Future<currentSettings?> fetchSettings() async {
@@ -47,14 +56,14 @@ Future<currentSettings?> fetchSettings() async {
   }
 }
 
-Future<void> changeSettings(vibrationStrength, flexSensitivity, waitTime) async {
+Future<void> changeSettings(vibrationStrength, flexSensitivity, vibrationDuration) async {
   final url = Uri.parse('https://sps-api-ce9301a647f2.herokuapp.com/settings');
   final headers = {"Content-type": "application/json"};
   final Map<String, String> data = {
     "device_id": "1",
     "vibration_strength": "${vibrationStrength.toString()}",
     "flex_sensitivity": "${flexSensitivity.toString()}",
-    "vibration_duration": "${waitTime.toString()}",
+    "vibration_duration": "${vibrationDuration.toString()}",
   };
 
   print(jsonEncode(data));
@@ -97,68 +106,67 @@ class MyAppState extends ChangeNotifier {
   List<bool> isSelected2 = [false, true, false];
 
   void initialSetting (settings) {
-    print(Text("here"));
     if (settings.vibrationStrength == "0") {
       isSelected0 = [true, false, false];
     }
-    else if (settings.vibrationStrength == "50") {
+    else if (settings.vibrationStrength == "1") {
       isSelected0 = [false, true, false];
     }
-    else if (settings.vibrationStrength == "100") {
+    else if (settings.vibrationStrength == "2") {
       isSelected0 = [false, false, true];
     }
 
     if (settings.flexSensitivity == "0") {
       isSelected1 = [true, false, false];
     }
-    else if (settings.flexSensitivity == "50") {
+    else if (settings.flexSensitivity == "1") {
       isSelected1 = [false, true, false];
     }
-    else if (settings.flexSensitivity == "100") {
+    else if (settings.flexSensitivity == "2") {
       isSelected1 = [false, false, true];
     }
 
-    if (settings.waitTime == 5) {
+    if (settings.vibrationDuration == "5000") {
       isSelected2 = [true, false, false];
     }
-    else if (settings.waitTime == 10) {
+    else if (settings.vibrationDuration == "10000") {
       isSelected2 = [false, true, false];
     }
-    else if (settings.waitTime == 15) {
+    else if (settings.vibrationDuration == "15000") {
       isSelected2 = [false, false, true];
     }
     notifyListeners();
   }
 
-  var vibrationStrength = 0;
-  var flexSensitivity = 0;
-  var waitTime = 10;
+  var vibrationStrength = "";
+  var flexSensitivity = "";
+  var vibrationDuration = "";
   var deviceID = 1;
 
 
   void calibrateSPS (selected0,selected1,selected2) {
     if (selected0[0] == true){
-        vibrationStrength = 0;}
+        vibrationStrength = "0";}
       else if (selected0[1]== true){
-        vibrationStrength = 50;}
+        vibrationStrength = "1";}
       else if (selected0[2]== true){
-        vibrationStrength = 100;}
+        vibrationStrength = "2";}
 
     if (selected1[0] == true){
-        flexSensitivity = 0;}
+        flexSensitivity = "0";}
       else if (selected1[1]== true){
-        flexSensitivity = 50;}
+        flexSensitivity = "1";}
       else if (selected1[2]== true){
-        flexSensitivity = 100;}
+        flexSensitivity = "2";}
 
     if (selected2[0] == true){
-        waitTime = 5;}
+        vibrationDuration = "";}
       else if (selected2[1]== true){
-        waitTime = 10;}
+        vibrationDuration = "";}
       else if (selected2[2]== true){
-        waitTime = 15;}
+        vibrationDuration = "";}
 
-    changeSettings(vibrationStrength,flexSensitivity,waitTime);
+    changeSettings(vibrationStrength,flexSensitivity,vibrationDuration);
   }
 
 
@@ -166,13 +174,20 @@ class MyAppState extends ChangeNotifier {
   var badPostureCountToday = 20;
   var badPostureCountWeek = 50;
   var badPostureCountMonth = 180;
+  var badPostureCountTodayColor = "green";
 
 
   void setPostureCounts () {
-    print( Text('setting bad posture counts'));
-    badPostureCountToday = Random().nextInt(20)+5;0;
-    badPostureCountMonth = Random().nextInt(100)+80;
-    badPostureCountWeek = Random().nextInt(50)+2;
+    badPostureCountToday = Random().nextInt(20)+5;
+    badPostureCountWeek = (5 * badPostureCountToday) + Random().nextInt(35)+10;
+    badPostureCountMonth = (2* badPostureCountWeek) + Random().nextInt(250)+50;
+
+    if (badPostureCountToday<10){
+      badPostureCountTodayColor = "green";}
+    else if (badPostureCountToday>=10 && badPostureCountToday<20){
+      badPostureCountTodayColor = "orange";}
+    else if (badPostureCountToday>=20){
+      badPostureCountTodayColor = "red";}
     notifyListeners();
   }
 }
@@ -193,10 +208,13 @@ class _MyHomePageState extends State<MyHomePage> {
     futurecurrentSettings.then((settings) {
       if (settings != null) {
         context.read<MyAppState>().initialSetting(settings);
-
-         }});
+        context.read<MyAppState>().setPostureCounts ();
+         }
+    });
   }
+
   var selectedIndex = 0;
+
 
   @override
   Widget build(BuildContext context) {
@@ -226,7 +244,7 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings),
-            label: 'Calibration',
+            label: 'Personalization',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.bar_chart),
@@ -254,30 +272,94 @@ class _WelcomePageState extends State<WelcomePage> {
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
     var today = appState.badPostureCountToday;
+    var colorToday = appState.badPostureCountTodayColor;
+
+    Map<String, Color> colorMap = {
+      'red': Colors.red,
+      'orange': Colors.orange,
+      'green': Colors.green,
+    };
+
+    String selectedColor = colorToday;
+
+    void showTutorial(){
+        showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                title: Text("Welcome to the Smart Posture Strips App"),
+                content: SingleChildScrollView(
+                  child: Text(
+                      "The app consists of 3 pages. You can switch between them by using the buttons on the bottom of your screen. The page you see upon opening is just the landing page, there is nothing to do there but you can quickly see how many times the device had to correct you that day.\n\n"
+                      "The second page you can visit it the personalization page. Here you can adjust the settings of the device, these settings are:\n\n"
+                      "Vibration intensity: this setting will determine the power of the vibration motor in the device.\n\n"
+                      "Bending sensitivity: this setting will determine the sensitivity of the bending sensor of the device. Set it to low if you only want to be corrected when you bend your neck very far and set it to high if you really want to keep your neck straight.\n\n"
+                      "Vibration duration: this setting will determine how long the device will vibrate when bad posture is detected.\n\n"
+                      "For every setting you have 3 options to chose from so you can play around with it to find out what works for you!\n\n"
+                      "Last but not least is the statistics page, here you can see some data of how you performed over a period of time, these stats will update automatically every time when you open the app so you don't have to worry about it.\n\n"
+                      "We hope our device will help you correct your posture and we wish you can one day get rid of the device and do it all on your own!",
+                    style: TextStyle(fontSize: 20),),
+                ),
+                actions: [
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: Text("Got it"),
+                  ),
+                ],
+              );
+            });
+    }
 
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          Align(
+            alignment: Alignment.topRight, // Align to the top-left corner
+            child: ElevatedButton(
+              onPressed: () {
+                showTutorial();
+              },
+              child: Icon(
+                Icons.help,
+                size: 60,
+              ),
+            ),
+          ),
+          SizedBox(height: 35),
           Image.asset('assets/images/Logo.png'),
           SizedBox(height: 25),
           Card(
             color: Colors.white,
             child: Padding(
               padding: const EdgeInsets.all(8.0),
-                child: Text(
-                "Bad posture count today:",
-                  style: TextStyle(fontSize: 20),
-                ),),),
-          SizedBox(height: 10),
-          Card(
-            color: Colors.white,
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
               child: Text(
-                  "$today",
+                "Bad posture count today:",
+                style: TextStyle(fontSize: 20),
+              ),
+            ),
+          ),
+          SizedBox(height: 10),
+          Container(
+            width: 75,
+            height: 75,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: colorMap[selectedColor] ?? Colors.white,
+            ),
+            child: Center(
+              child: Text(
+                "$today",
                 style: TextStyle(fontSize: 30),
-              ),),),],),);}}
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+          }}
 
 class CalibrationPage extends StatefulWidget {
   @override
@@ -301,8 +383,8 @@ class _CalibrationPageState extends State<CalibrationPage> {
         barrierDismissible: false, // Prevent the user from dismissing the dialog
         builder: (BuildContext context) {
           return AlertDialog(
-            title: Text('Calibrating'),
-            content: Text('Please sit still in the correct posture for 5 seconds...',
+            title: Text('Saving'),
+            content: Text('Please wait while the settings are saved...',
             style: TextStyle(fontSize:20),),
           );
         },
@@ -321,15 +403,24 @@ class _CalibrationPageState extends State<CalibrationPage> {
             color: Colors.white,
             child: Padding(
               padding: const EdgeInsets.all(8.0),
-              child: Text(
-                "Vibration intensity:",
-                style: TextStyle(fontSize: 20),
+              child: RichText(
+                text: TextSpan(
+                  children: [
+                    WidgetSpan(
+                      child: Icon(Icons.vibration, size: 20),
+                    ),
+                    TextSpan(
+                      text: "Vibration intensity",
+                      style: TextStyle(fontSize: 20, color: Colors.black,),
+                    ),
+                  ],
+                ),
               ),),),
           SizedBox(height: 10),
           Container(
             padding: EdgeInsets.zero,
             decoration: BoxDecoration(
-              color: Colors.white),
+              color: Colors.red[100]),
             child: ToggleButtons(
               isSelected: isSelected0,
               onPressed: (int index) {
@@ -341,7 +432,7 @@ class _CalibrationPageState extends State<CalibrationPage> {
                       isSelected0[buttonIndex] = false;
                     }}});},
               color: Colors.black,
-              fillColor: Colors.grey[300],
+              fillColor: Colors.green[100],
               borderColor: Colors.white,
               children: const <Widget>[
                 Padding(
@@ -360,20 +451,29 @@ class _CalibrationPageState extends State<CalibrationPage> {
                     style: TextStyle(fontSize: 20),),
                 ),
               ],),),
-          SizedBox(height: 20),
+          SizedBox(height: 50),
           Card(
             color: Colors.white,
             child: Padding(
               padding: const EdgeInsets.all(8.0),
-              child: Text(
-                "Flex sensitivity:",
-                style: TextStyle(fontSize: 20),
+              child: RichText(
+                text: TextSpan(
+                  children: [
+                    WidgetSpan(
+                      child: Icon(Icons.sensors, size: 20),
+                    ),
+                    TextSpan(
+                      text: "Bending sensitivity",
+                      style: TextStyle(fontSize: 20, color: Colors.black,),
+                    ),
+                  ],
+                ),
               ),),),
           SizedBox(height: 10),
           Container(
             padding: EdgeInsets.zero,
             decoration: BoxDecoration(
-                color: Colors.white),
+                color: Colors.red[100]),
             child: ToggleButtons(
               isSelected: isSelected1,
               onPressed: (int index) {
@@ -385,7 +485,7 @@ class _CalibrationPageState extends State<CalibrationPage> {
                       isSelected1[buttonIndex] = false;
                     }}});},
               color: Colors.black,
-              fillColor: Colors.grey[300],
+              fillColor: Colors.green[100],
               borderColor: Colors.white,
               children: const <Widget>[
                 Padding(
@@ -404,20 +504,29 @@ class _CalibrationPageState extends State<CalibrationPage> {
                     style: TextStyle(fontSize: 20),),
                 ),
               ],),),
-          SizedBox(height: 20),
+          SizedBox(height: 50),
           Card(
             color: Colors.white,
             child: Padding(
               padding: const EdgeInsets.all(8.0),
-              child: Text(
-                "Wait time before vibration occurs:",
-                style: TextStyle(fontSize: 20),
+              child: RichText(
+                text: TextSpan(
+                  children: [
+                    WidgetSpan(
+                      child: Icon(Icons.timer, size: 20),
+                    ),
+                    TextSpan(
+                      text: "Vibration duration (seconds)",
+                      style: TextStyle(fontSize: 20, color: Colors.black,),
+                    ),
+                  ],
+                ),
               ),),),
           SizedBox(height: 10),
           Container(
             padding: EdgeInsets.zero,
             decoration: BoxDecoration(
-            color: Colors.white),
+            color: Colors.red[100]),
             child: ToggleButtons(
               isSelected: isSelected2,
               onPressed: (int index) {
@@ -429,7 +538,7 @@ class _CalibrationPageState extends State<CalibrationPage> {
                       isSelected2[buttonIndex] = false;
                     }}});},
               color: Colors.black, // Set the background color of all buttons to white
-              fillColor: Colors.grey[300], // Background color when selected
+              fillColor: Colors.green[100], // Background color when selected
               borderColor: Colors.white, // Border color when selected
               children: const <Widget>[
                 Text("5",
@@ -441,7 +550,7 @@ class _CalibrationPageState extends State<CalibrationPage> {
               ],
             ),
           ),
-          SizedBox(height: 20),
+          SizedBox(height: 100),
           Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -450,7 +559,9 @@ class _CalibrationPageState extends State<CalibrationPage> {
                 startCalibrationTimer();
               },
 
-              child: Text('calibrate sensors and save current settings'),
+              child: Text('Save current settings',
+                style: TextStyle(fontSize: 15),
+              ),
             ),
           ],
         ),
@@ -493,15 +604,22 @@ class _StatisticsPageState extends State<StatisticsPage> {
                   "Bad posture count today:",
                   style: TextStyle(fontSize: 20),
               ),),),
-          Card(
-            color: Colors.white,
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
+          SizedBox(height: 10),
+          Container(
+            width: 75,
+            height: 75,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white,
+            ),
+            child: Center(
               child: Text(
-                  "$today",
-                style: TextStyle(fontSize: 20),
-              ),),),
-          SizedBox(height: 15),
+                "$today",
+                style: TextStyle(fontSize: 30),
+              ),
+            ),
+          ),
+          SizedBox(height: 30),
           Card(
             color: Colors.white,
             child: Padding(
@@ -510,15 +628,22 @@ class _StatisticsPageState extends State<StatisticsPage> {
                   "Bad posture count this week:",
                 style: TextStyle(fontSize: 20),
               ),),),
-          Card(
-            color: Colors.white,
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
+          SizedBox(height: 10),
+          Container(
+            width: 75,
+            height: 75,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white,
+            ),
+            child: Center(
               child: Text(
-                  "$week",
-                  style: TextStyle(fontSize: 20),
-              ),),),
-          SizedBox(height: 15),
+                "$week",
+                style: TextStyle(fontSize: 30),
+              ),
+            ),
+          ),
+          SizedBox(height: 30),
           Card(
             color: Colors.white,
             child: Padding(
@@ -527,15 +652,22 @@ class _StatisticsPageState extends State<StatisticsPage> {
                   "Bad posture count this month:",
                 style: TextStyle(fontSize: 20),
               ),),),
-          Card(
-            color: Colors.white,
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
+          SizedBox(height: 10),
+          Container(
+            width: 75,
+            height: 75,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white,
+            ),
+            child: Center(
               child: Text(
-                  "$month",
-                style: TextStyle(fontSize: 20),
-              ),),),
-          SizedBox(height: 60),
+                "$month",
+                style: TextStyle(fontSize: 30),
+              ),
+            ),
+          ),
+          SizedBox(height: 100),
           Card(
             color: Colors.white,
             child: Padding(
@@ -545,13 +677,6 @@ class _StatisticsPageState extends State<StatisticsPage> {
                 style: TextStyle(fontSize: 20),
                 textAlign: TextAlign.center,
               ),),),
-          SizedBox(height: 60),
-          ElevatedButton(
-            onPressed: () {
-              appState.setPostureCounts();
-              },
-           child: Text('Update to latest data'),
-          ),
         ],
       ),
     );
