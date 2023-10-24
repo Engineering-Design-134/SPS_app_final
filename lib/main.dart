@@ -12,9 +12,9 @@ void main() {
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
   ]).then((value) {
-      runApp(MyApp());
-    });
-  }
+    runApp(MyApp());
+  });
+}
 
 
 bool tutorialShown = false;
@@ -94,7 +94,7 @@ class MyApp extends StatelessWidget {
 
 class MyAppState extends ChangeNotifier {
   List<bool> isSelected0 = [false, true, false];
-  List<bool> isSelected1 = [false, true, false];
+  double _currentSliderValue = 0;
   List<bool> isSelected2 = [false, true, false];
 
   void initialSetting (settings) {
@@ -108,15 +108,7 @@ class MyAppState extends ChangeNotifier {
       isSelected0 = [false, false, true];
     }
 
-    if (settings.flexSensitivity == "0") {
-      isSelected1 = [true, false, false];
-    }
-    else if (settings.flexSensitivity == "1") {
-      isSelected1 = [false, true, false];
-    }
-    else if (settings.flexSensitivity == "2") {
-      isSelected1 = [false, false, true];
-    }
+    _currentSliderValue = (double.parse(settings.flexSensitivity) - 800)/4;
 
     if (settings.vibrationDuration == "500") {
       isSelected2 = [true, false, false];
@@ -136,27 +128,22 @@ class MyAppState extends ChangeNotifier {
   var deviceID = 1;
 
 
-  void calibrateSPS (selected0,selected1,selected2) {
+  void calibrateSPS (selected0,_currentSliderValue,selected2) {
     if (selected0[0] == true){
-        vibrationStrength = "0";}
-      else if (selected0[1]== true){
-        vibrationStrength = "1";}
-      else if (selected0[2]== true){
-        vibrationStrength = "2";}
+      vibrationStrength = "0";}
+    else if (selected0[1]== true){
+      vibrationStrength = "1";}
+    else if (selected0[2]== true){
+      vibrationStrength = "2";}
 
-    if (selected1[0] == true){
-        flexSensitivity = "0";}
-      else if (selected1[1]== true){
-        flexSensitivity = "1";}
-      else if (selected1[2]== true){
-        flexSensitivity = "2";}
+    flexSensitivity = (_currentSliderValue*4 + 800).toString();
 
     if (selected2[0] == true){
-        vibrationDuration = "500";}
-      else if (selected2[1]== true){
-        vibrationDuration = "1000";}
-      else if (selected2[2]== true){
-        vibrationDuration = "2000";}
+      vibrationDuration = "500";}
+    else if (selected2[1]== true){
+      vibrationDuration = "1000";}
+    else if (selected2[2]== true){
+      vibrationDuration = "2000";}
 
     changeSettings(vibrationStrength,flexSensitivity,vibrationDuration);
   }
@@ -201,7 +188,7 @@ class _MyHomePageState extends State<MyHomePage> {
       if (settings != null) {
         context.read<MyAppState>().initialSetting(settings);
         context.read<MyAppState>().setPostureCounts ();
-         }
+      }
     });
   }
 
@@ -275,33 +262,33 @@ class _WelcomePageState extends State<WelcomePage> {
     String selectedColor = colorToday;
 
     void showTutorial(){
-        showDialog(
-            context: context,
-            builder: (context) {
-              return AlertDialog(
-                title: Text("Welcome to the Smart Posture Strips App"),
-                content: SingleChildScrollView(
-                  child: Text(
-                      "The app consists of 3 pages. You can switch between them by using the buttons on the bottom of your screen. The page you see upon opening is just the landing page, there is nothing to do there but you can quickly see how many times the device had to correct you that day.\n\n"
+      showDialog(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: Text("Welcome to the Smart Posture Strips App"),
+              content: SingleChildScrollView(
+                child: Text(
+                  "The app consists of 3 pages. You can switch between them by using the buttons on the bottom of your screen. The page you see upon opening is just the landing page, there is nothing to do there but you can quickly see how many times the device had to correct you that day.\n\n"
                       "The second page you can visit it the personalization page. Here you can adjust the settings of the device, these settings are:\n\n"
                       "Vibration intensity: this setting will determine the power of the vibration motor in the device.\n\n"
-                      "Bending sensitivity: this setting will determine the sensitivity of the bending sensor of the device. Set it to low if you only want to be corrected when you bend your neck very far and set it to high if you really want to keep your neck straight.\n\n"
+                      "Bending sensitivity: this setting will determine the sensitivity of the bending sensor of the device. \n\n"
                       "Vibration duration: this setting will determine how long the device will vibrate when bad posture is detected.\n\n"
-                      "For every setting you have 3 options to chose from so you can play around with it to find out what works for you!\n\n"
+                      "To ensure the best user experience we highly encourage playing around with the settings to see what is best for your neck!\n\n"
                       "Last but not least is the statistics page, here you can see some data of how you performed over a period of time, these stats will update automatically every time when you open the app so you don't have to worry about it.\n\n"
                       "We hope our device will help you correct your posture and we wish you can one day get rid of the device and do it all on your own!",
-                    style: TextStyle(fontSize: 20),),
+                  style: TextStyle(fontSize: 20),),
+              ),
+              actions: [
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Text("Got it"),
                 ),
-                actions: [
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                    child: Text("Got it"),
-                  ),
-                ],
-              );
-            });
+              ],
+            );
+          });
     }
 
     return Center(
@@ -351,7 +338,7 @@ class _WelcomePageState extends State<WelcomePage> {
         ],
       ),
     );
-          }}
+  }}
 
 class CalibrationPage extends StatefulWidget {
   @override
@@ -364,11 +351,12 @@ class _CalibrationPageState extends State<CalibrationPage> {
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
     var isSelected0 = appState.isSelected0;
-    var isSelected1 = appState.isSelected1;
+    var _currentSliderValue = appState._currentSliderValue;
     var isSelected2 = appState.isSelected2;
 
+
     void startCalibrationTimer() {
-      appState.calibrateSPS(isSelected0,isSelected1,isSelected2);
+      appState.calibrateSPS(isSelected0,_currentSliderValue,isSelected2);
 
       showDialog(
         context: context,
@@ -377,188 +365,199 @@ class _CalibrationPageState extends State<CalibrationPage> {
           return AlertDialog(
             title: Text('Saving'),
             content: Text('Please wait while the settings are saved...',
-            style: TextStyle(fontSize:20),),
+              style: TextStyle(fontSize:20),),
           );
         },
       );
-      Timer(Duration(seconds: 5), () {
+      Timer(Duration(seconds: 2), () {
         Navigator.of(context).pop();
       });
     }
 
 
-    return Center(
-        child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Card(
-            color: Colors.white,
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: RichText(
-                text: TextSpan(
-                  children: [
-                    WidgetSpan(
-                      child: Icon(Icons.vibration, size: 20),
+    return StatefulBuilder(
+        builder: (BuildContext context, StateSetter setState){
+          return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Card(
+                color: Colors.white,
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: RichText(
+                    text: TextSpan(
+                      children: [
+                        WidgetSpan(
+                          child: Icon(Icons.vibration, size: 20),
+                        ),
+                        TextSpan(
+                          text: "Vibration intensity",
+                          style: TextStyle(fontSize: 20, color: Colors.black,),
+                        ),
+                      ],
                     ),
-                    TextSpan(
-                      text: "Vibration intensity",
-                      style: TextStyle(fontSize: 20, color: Colors.black,),
+                  ),),),
+              SizedBox(height: 10),
+              Container(
+                padding: EdgeInsets.zero,
+                decoration: BoxDecoration(
+                    color: Colors.red[100]),
+                child: ToggleButtons(
+                  isSelected: isSelected0,
+                  onPressed: (int index) {
+                    setState(() {
+                      for (int buttonIndex = 0; buttonIndex < isSelected0.length; buttonIndex++) {
+                        if (buttonIndex == index) {
+                          isSelected0[buttonIndex] = true;
+                        } else {
+                          isSelected0[buttonIndex] = false;
+                        }}});},
+                  color: Colors.black,
+                  fillColor: Colors.green[100],
+                  borderColor: Colors.white,
+                  children: const <Widget>[
+                    Padding(
+                      padding: EdgeInsets.all(15.0),
+                      child: Text("Light",
+                        style: TextStyle(fontSize: 20),),
                     ),
+                    Padding(
+                      padding: EdgeInsets.all(15.0),
+                      child: Text("Medium",
+                        style: TextStyle(fontSize: 20),),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.all(15.0),
+                      child: Text("Heavy",
+                        style: TextStyle(fontSize: 20),),
+                    ),
+                  ],),),
+              SizedBox(height: 50),
+              Card(
+                color: Colors.white,
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: RichText(
+                    text: TextSpan(
+                      children: [
+                        WidgetSpan(
+                          child: Icon(Icons.sensors, size: 20),
+                        ),
+                        TextSpan(
+                          text: "Bending sensitivity",
+                          style: TextStyle(fontSize: 20, color: Colors.black,),
+                        ),
+                      ],
+                    ),
+                  ),),),
+              SizedBox(height: 10),
+              Slider(
+                value: _currentSliderValue,
+                min: 0,
+                max: 100,
+                label: _currentSliderValue.round().toString(),
+                onChanged: (double value) {
+                  setState(() {
+                    _currentSliderValue = value;});}),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Card(
+                    color: Colors.white,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: RichText(
+                        text: TextSpan(
+                          children: [
+                            TextSpan(
+                              text: "Min",
+                              style: TextStyle(fontSize: 20, color: Colors.black,),
+                            ),
+                          ],
+                        ),
+                      ),),),
+                  SizedBox(width: 250), // Adjust the width to control spacing
+                  Card(
+                    color: Colors.white,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                    child: RichText(
+                      text: TextSpan(
+                      children: [
+                        TextSpan(
+                          text: "Max",
+                          style: TextStyle(fontSize: 20, color: Colors.black,),
+                      ),
+                    ],
+                  ),
+                ),),),
+              ]),
+              SizedBox(height: 50),
+              Card(
+                color: Colors.white,
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: RichText(
+                    text: TextSpan(
+                      children: [
+                        WidgetSpan(
+                          child: Icon(Icons.timer, size: 20),
+                        ),
+                        TextSpan(
+                          text: "Vibration duration (seconds)",
+                          style: TextStyle(fontSize: 20, color: Colors.black,),
+                        ),
+                      ],
+                    ),
+                  ),),),
+              SizedBox(height: 10),
+              Container(
+                padding: EdgeInsets.zero,
+                decoration: BoxDecoration(
+                    color: Colors.red[100]),
+                child: ToggleButtons(
+                  isSelected: isSelected2,
+                  onPressed: (int index) {
+                    setState(() {
+                      for (int buttonIndex = 0; buttonIndex < isSelected2.length; buttonIndex++) {
+                        if (buttonIndex == index) {
+                          isSelected2[buttonIndex] = true;
+                        } else {
+                          isSelected2[buttonIndex] = false;
+                        }}});},
+                  color: Colors.black, // Set the background color of all buttons to white
+                  fillColor: Colors.green[100], // Background color when selected
+                  borderColor: Colors.white, // Border color when selected
+                  children: const <Widget>[
+                    Text("0.5",
+                      style: TextStyle(fontSize: 20),),
+                    Text("1",
+                      style: TextStyle(fontSize: 20),),
+                    Text("2",
+                      style: TextStyle(fontSize: 20),),
                   ],
                 ),
-              ),),),
-          SizedBox(height: 10),
-          Container(
-            padding: EdgeInsets.zero,
-            decoration: BoxDecoration(
-              color: Colors.red[100]),
-            child: ToggleButtons(
-              isSelected: isSelected0,
-              onPressed: (int index) {
-                setState(() {
-                  for (int buttonIndex = 0; buttonIndex < isSelected0.length; buttonIndex++) {
-                    if (buttonIndex == index) {
-                      isSelected0[buttonIndex] = true;
-                    } else {
-                      isSelected0[buttonIndex] = false;
-                    }}});},
-              color: Colors.black,
-              fillColor: Colors.green[100],
-              borderColor: Colors.white,
-              children: const <Widget>[
-                Padding(
-                  padding: EdgeInsets.all(15.0),
-                  child: Text("Light",
-                    style: TextStyle(fontSize: 20),),
-                ),
-                Padding(
-                  padding: EdgeInsets.all(15.0),
-                  child: Text("Medium",
-                    style: TextStyle(fontSize: 20),),
-                ),
-                Padding(
-                  padding: EdgeInsets.all(15.0),
-                  child: Text("Heavy",
-                    style: TextStyle(fontSize: 20),),
-                ),
-              ],),),
-          SizedBox(height: 50),
-          Card(
-            color: Colors.white,
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: RichText(
-                text: TextSpan(
-                  children: [
-                    WidgetSpan(
-                      child: Icon(Icons.sensors, size: 20),
-                    ),
-                    TextSpan(
-                      text: "Bending sensitivity",
-                      style: TextStyle(fontSize: 20, color: Colors.black,),
-                    ),
-                  ],
-                ),
-              ),),),
-          SizedBox(height: 10),
-          Container(
-            padding: EdgeInsets.zero,
-            decoration: BoxDecoration(
-                color: Colors.red[100]),
-            child: ToggleButtons(
-              isSelected: isSelected1,
-              onPressed: (int index) {
-                setState(() {
-                  for (int buttonIndex = 0; buttonIndex < isSelected1.length; buttonIndex++) {
-                    if (buttonIndex == index) {
-                      isSelected1[buttonIndex] = true;
-                    } else {
-                      isSelected1[buttonIndex] = false;
-                    }}});},
-              color: Colors.black,
-              fillColor: Colors.green[100],
-              borderColor: Colors.white,
-              children: const <Widget>[
-                Padding(
-                  padding: EdgeInsets.all(15.0),
-                  child: Text("Low",
-                    style: TextStyle(fontSize: 20),),
-                ),
-                Padding(
-                  padding: EdgeInsets.all(15.0),
-                  child: Text("Medium",
-                    style: TextStyle(fontSize: 20),),
-                ),
-                Padding(
-                  padding: EdgeInsets.all(15.0),
-                  child: Text("High",
-                    style: TextStyle(fontSize: 20),),
-                ),
-              ],),),
-          SizedBox(height: 50),
-          Card(
-            color: Colors.white,
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: RichText(
-                text: TextSpan(
-                  children: [
-                    WidgetSpan(
-                      child: Icon(Icons.timer, size: 20),
-                    ),
-                    TextSpan(
-                      text: "Vibration duration (seconds)",
-                      style: TextStyle(fontSize: 20, color: Colors.black,),
-                    ),
-                  ],
-                ),
-              ),),),
-          SizedBox(height: 10),
-          Container(
-            padding: EdgeInsets.zero,
-            decoration: BoxDecoration(
-            color: Colors.red[100]),
-            child: ToggleButtons(
-              isSelected: isSelected2,
-              onPressed: (int index) {
-                setState(() {
-                  for (int buttonIndex = 0; buttonIndex < isSelected2.length; buttonIndex++) {
-                    if (buttonIndex == index) {
-                      isSelected2[buttonIndex] = true;
-                    } else {
-                      isSelected2[buttonIndex] = false;
-                    }}});},
-              color: Colors.black, // Set the background color of all buttons to white
-              fillColor: Colors.green[100], // Background color when selected
-              borderColor: Colors.white, // Border color when selected
-              children: const <Widget>[
-                Text("0.5",
-                    style: TextStyle(fontSize: 20),),
-                Text("1",
-                    style: TextStyle(fontSize: 20),),
-                Text("2",
-                  style: TextStyle(fontSize: 20),),
-              ],
-            ),
-          ),
-          SizedBox(height: 100),
-          Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ElevatedButton(
-              onPressed: () {
-                startCalibrationTimer();
-              },
-
-              child: Text('Save current settings',
-                style: TextStyle(fontSize: 15),
               ),
-            ),
-          ],
-        ),
-        ],
-        ),
+              SizedBox(height: 100),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      startCalibrationTimer();
+                    },
+
+                    child: Text('Save current settings',
+                      style: TextStyle(fontSize: 15),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      }
     );
   }
 }
@@ -577,11 +576,11 @@ class _StatisticsPageState extends State<StatisticsPage> {
     var month = appState.badPostureCountMonth;
     var message = "";
     if (today<10){
-        message = "You're doing great today!";}
-      else if (today>=10 && today<20){
-        message = "There's still room for improvement, keep trying!";}
-      else if (today>=20){
-        message = "Be careful with that neck!";}
+      message = "You're doing great today!";}
+    else if (today>=10 && today<20){
+      message = "There's still room for improvement, keep trying!";}
+    else if (today>=20){
+      message = "Be careful with that neck!";}
 
 
     return Center(
@@ -593,8 +592,8 @@ class _StatisticsPageState extends State<StatisticsPage> {
             child: Padding(
               padding: const EdgeInsets.all(8.0),
               child: Text(
-                  "Bad posture count today:",
-                  style: TextStyle(fontSize: 20),
+                "Bad posture count today:",
+                style: TextStyle(fontSize: 20),
               ),),),
           SizedBox(height: 10),
           Container(
@@ -617,7 +616,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
             child: Padding(
               padding: const EdgeInsets.all(8.0),
               child: Text(
-                  "Bad posture count this week:",
+                "Bad posture count this week:",
                 style: TextStyle(fontSize: 20),
               ),),),
           SizedBox(height: 10),
@@ -641,7 +640,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
             child: Padding(
               padding: const EdgeInsets.all(8.0),
               child: Text(
-                  "Bad posture count this month:",
+                "Bad posture count this month:",
                 style: TextStyle(fontSize: 20),
               ),),),
           SizedBox(height: 10),
@@ -674,5 +673,3 @@ class _StatisticsPageState extends State<StatisticsPage> {
     );
   }
 }
-
-
