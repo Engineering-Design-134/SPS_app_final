@@ -108,7 +108,7 @@ class MyAppState extends ChangeNotifier {
       isSelected0 = [false, false, true];
     }
 
-    _currentSliderValue = (double.parse(settings.flexSensitivity) - 800)/4;
+    _currentSliderValue = (double.parse(settings.flexSensitivity) - 900)/4;
 
     if (settings.vibrationDuration == "500") {
       isSelected2 = [true, false, false];
@@ -136,7 +136,7 @@ class MyAppState extends ChangeNotifier {
     else if (selected0[2]== true){
       vibrationStrength = "2";}
 
-    flexSensitivity = (_currentSliderValue*4 + 800).toString();
+    flexSensitivity = (_currentSliderValue*4 + 900).toString();
 
     if (selected2[0] == true){
       vibrationDuration = "500";}
@@ -225,10 +225,6 @@ class _MyHomePageState extends State<MyHomePage> {
             icon: Icon(Icons.settings),
             label: 'Personalization',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.bar_chart),
-            label: 'Statistics',
-          ),
         ],
         currentIndex: selectedIndex,
         onTap: (int index) {
@@ -269,13 +265,12 @@ class _WelcomePageState extends State<WelcomePage> {
               title: Text("Welcome to the Smart Posture Strips App"),
               content: SingleChildScrollView(
                 child: Text(
-                  "The app consists of 3 pages. You can switch between them by using the buttons on the bottom of your screen. The page you see upon opening is just the landing page, there is nothing to do there but you can quickly see how many times the device had to correct you that day.\n\n"
+                  "The app consists of 2 pages. You can switch between them by using the buttons on the bottom of your screen. The page you see upon opening is just the landing page, there is nothing to do there except opening this tutorial.\n\n"
                       "The second page you can visit it the personalization page. Here you can adjust the settings of the device, these settings are:\n\n"
                       "Vibration intensity: this setting will determine the power of the vibration motor in the device.\n\n"
                       "Bending sensitivity: this setting will determine the sensitivity of the bending sensor of the device. \n\n"
                       "Vibration duration: this setting will determine how long the device will vibrate when bad posture is detected.\n\n"
                       "To ensure the best user experience we highly encourage playing around with the settings to see what is best for your neck!\n\n"
-                      "Last but not least is the statistics page, here you can see some data of how you performed over a period of time, these stats will update automatically every time when you open the app so you don't have to worry about it.\n\n"
                       "We hope our device will help you correct your posture and we wish you can one day get rid of the device and do it all on your own!",
                   style: TextStyle(fontSize: 20),),
               ),
@@ -309,32 +304,6 @@ class _WelcomePageState extends State<WelcomePage> {
           ),
           SizedBox(height: 35),
           Image.asset('assets/images/Logo.png'),
-          SizedBox(height: 25),
-          Card(
-            color: Colors.white,
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text(
-                "Bad posture count today:",
-                style: TextStyle(fontSize: 20),
-              ),
-            ),
-          ),
-          SizedBox(height: 10),
-          Container(
-            width: 75,
-            height: 75,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: colorMap[selectedColor] ?? Colors.white,
-            ),
-            child: Center(
-              child: Text(
-                "$today",
-                style: TextStyle(fontSize: 30),
-              ),
-            ),
-          ),
         ],
       ),
     );
